@@ -1,87 +1,186 @@
 .data
-prompt:     .asciiz "Enter a number: "
-result_msg: .asciiz "The Fibonacci number is: "
-newline:    .asciiz "\n"
+
+failMsg:    .asciiz "Test case failed!!\n\n"
+passMsg:    .asciiz "Test case passed!!\n\n"
+
+excpected:  .asciiz "\tExcepected =\t"
+result:     .asciiz "\tResult =\t\t"
+
+newLine:    .asciiz "\n"
+
+test1:      .asciiz "Test fib(0)\n"
+test2:      .asciiz "Test fib(1)\n"
+test3:      .asciiz "Test fib(2)\n"
+test4:      .asciiz "Test fib(3)\n"
+test5:      .asciiz "Test fib(4)\n"
+test6:      .asciiz "Test fib(5)\n"
+test7:      .asciiz "Test fib(6)\n"
 
 .text
-main:
-    addi    $sp,        $sp,        -4
-    sw      $ra,        0($sp)
-    # 1. Print prompt
-    addi    $v0,        $zero,      4
-    la      $a0,        prompt
-    syscall
-    # 2. Read integer from user
-    addi    $v0,        $zero,      5
-    syscall
-    add     $a0,        $zero,      $v0
 
-    # 3. Call Fibonacci function
-    jal     fibonacci
-    move    $s1,        $v0
-
-    # 4. Print result message
-    addi    $v0,        $zero,      4
-    la      $a0,        result_msg
-    syscall
-
-    # 5. Print the calculated number
-    move    $a0,        $s1
-    addi    $v0,        $zero,      1
-    syscall
-
-    # 6. Print newline
-    addi    $v0,        $zero,      4
-    la      $a0,        newline
-    syscall
-
-    # 7. Exit program
-    lw      $ra,        0($sp)
-    jr      $ra
-
-    # ------------------------------------------------------------------
-    # Function: fibonacci
-    # Arguments: $a0 = n
-    # Returns:   $v0 = fib(n)
-    # Logic:     Recursive: fib(n) = fib(n-1) + fib(n-2)
-    # Base keys: fib(0)=0, fib(1)=1
-    # ------------------------------------------------------------------
-fibonacci:
+    #=====================================================
+    # Fibonacci Function (Iterative)
+    #   Parameters: $a0 -> n
+    #   Return:     $v0 -> fib(n)
+    #=====================================================
+fib:
     # If n <= 0, return 0
-    slt     $t0,        $zero,      $a0
-    beq     $t0,        $zero,      return_zero
-
+    blez    $a0,            return_zero
     # If n == 1, return 1
-    addi    $t1,        $zero,      1
-    beq     $a0,        $t1,        return_one
+    li      $t0,            1
+    beq     $a0,            $t0,            return_one
 
-    # Recursive: fib(n) = fib(n-1) + fib(n-2)
-    addi    $sp,        $sp,        -12
-    sw      $ra,        0($sp)
-    sw      $a0,        4($sp)
+    # for n >= 2
+    li      $t1,            0
+    li      $t2,            1
+    li      $t3,            2
+    move    $t4,            $a0
 
-    addi    $a0,        $a0,        -1
-    jal     fibonacci
-    sw      $v0,        8($sp)
+loop:
+    bgt     $t3,            $t4,            end_loop
 
-    lw      $a0,        4($sp)
-    addi    $a0,        $a0,        -2
-    jal     fibonacci
+    add     $t5,            $t1,            $t2
+    move    $t1,            $t2
+    move    $t2,            $t5
 
+    addi    $t3,            $t3,            1
+    j       loop
 
-    lw      $t2,        8($sp)
-    add     $v0,        $v0,        $t2         # fib(n-2) + fib(n-1)
-
-    # Exit fibonacci
-    lw      $ra,        0($sp)
-    addi    $sp,        $sp,        12
+end_loop:
+    move    $v0,            $t2
     jr      $ra
-
 
 return_zero:
-    add     $v0,        $zero,      $zero
+    li      $v0,            0
     jr      $ra
 
 return_one:
-    addi    $v0,        $zero,      1
+    li      $v0,            1
+    jr      $ra
+
+
+    #=====================================================
+    # Main Function (Test Harness)
+    #=====================================================
+main:
+    addi    $sp,            $sp,            -4
+    sw      $ra,            0($sp)
+
+    # ========= test fib(0) =========
+    li      $a0,            0
+    jal     fib
+
+    li      $a0,            0
+    move    $a1,            $v0
+    la      $a2,            test1
+    jal     assertNotEqual
+
+
+    # ========= test fib(1) =========
+    li      $a0,            1
+    jal     fib
+
+    li      $a0,            1
+    move    $a1,            $v0
+    la      $a2,            test2
+    jal     assertNotEqual
+
+    # ========= test fib(2) =========
+    li      $a0,            2
+    jal     fib
+
+    li      $a0,            1
+    move    $a1,            $v0
+    la      $a2,            test3
+    jal     assertNotEqual
+
+    # ========= test fib(3) =========
+    li      $a0,            3
+    jal     fib
+
+    li      $a0,            2
+    move    $a1,            $v0
+    la      $a2,            test4
+    jal     assertNotEqual
+
+    # ========= test fib(4) =========
+    li      $a0,            4
+    jal     fib
+
+    li      $a0,            3
+    move    $a1,            $v0
+    la      $a2,            test5
+    jal     assertNotEqual
+
+    # ========= test fib(5) =========
+    li      $a0,            5
+    jal     fib
+
+    li      $a0,            5
+    move    $a1,            $v0
+    la      $a2,            test6
+    jal     assertNotEqual
+
+    # ========= test fib(6) =========
+    li      $a0,            6
+    jal     fib
+
+    li      $a0,            8
+    move    $a1,            $v0
+    la      $a2,            test7
+    jal     assertNotEqual
+
+
+    lw      $ra,            0($sp)
+    addi    $sp,            $sp,            4
+    jr      $ra
+
+
+    #================================================================================
+    # assertNotEqual
+    #   Parameters: $a0 -> expected, $a1 -> result, $a2 -> testNumberMsg
+    #   Return:     ----
+    #================================================================================
+assertNotEqual:
+
+    move    $t0,            $a0
+
+    li      $v0,            4
+    move    $a0,            $a2
+    syscall
+
+    la      $a0,            excpected
+    syscall
+
+    li      $v0,            1
+    move    $a0,            $t0
+    syscall
+
+    li      $v0,            4
+    la      $a0,            newLine
+    syscall
+
+    la      $a0,            result
+    syscall
+
+    li      $v0,            1
+    move    $a0,            $a1
+    syscall
+
+    li      $v0,            4
+    la      $a0,            newLine
+    syscall
+
+    bne     $t0,            $a1,            printFail
+
+    la      $a0,            passMsg
+    syscall
+
+    j       return
+
+printFail:
+    la      $a0,            failMsg
+    syscall
+
+return:
     jr      $ra
